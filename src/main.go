@@ -52,25 +52,86 @@ func initialModel() model {
 	}
 }
 
+func (m *model) SpawnNum() {
+	var freeRowCol [][2]int
+	for i, row := range m.grid {
+		for j := range row {
+			if m.grid[i][j] == 0 {
+				freeRowCol = append(freeRowCol, [2]int{i, j})
+			}
+		}
+	}
+
+	if len(freeRowCol) == 0 {
+		return
+	}
+	randomGrid := freeRowCol[rand.Intn(len(freeRowCol))]
+	m.grid[randomGrid[0]][randomGrid[1]] = 2
+}
+
 func (m *model) MoveGrid(direction string) {
-	switch direction {
-	case "up":
+	if direction == "up" || direction == "down" {
+		var checkMax int
+		var inc int
+		if direction == "up" {
+			checkMax = 0
+			inc = -1
+		} else if direction == "down" {
+			checkMax = 3
+			inc = 1
+		}
+
 		for i, row := range m.grid {
 			for j := range row {
-				if i == 0 {
-					continue
-				}
 				counter := i
-				for counter != 0 {
-					if m.grid[i][j] == m.grid[i-1][j] {
-						m.grid[i-1][j] = m.grid[i][j] * 2
-						m.grid[i][j] = 0
-					} else if m.grid[i-1][j] == 0 {
-
-						m.grid[i-1][j] = m.grid[i][j]
-						m.grid[i][j] = 0
+				for counter != checkMax {
+					if m.grid[counter][j] == m.grid[counter+inc][j] {
+						m.grid[counter+inc][j] = m.grid[counter][j] * 2
+						m.score += m.grid[i][counter+inc]
+						m.grid[counter][j] = 0
+					} else if m.grid[counter+inc][j] == 0 {
+						m.grid[counter+inc][j] = m.grid[counter][j]
+						m.grid[counter][j] = 0
 					}
-					counter -= 1
+
+					if direction == "up" {
+						counter -= 1
+					} else {
+						counter += 1
+					}
+				}
+			}
+		}
+
+	} else if direction == "left" || direction == "right" {
+		var checkMax int
+		var inc int
+		if direction == "left" {
+			checkMax = 0
+			inc = -1
+		} else if direction == "right" {
+			checkMax = 3
+			inc = 1
+		}
+
+		for i, row := range m.grid {
+			for j := range row {
+				counter := j
+				for counter != checkMax {
+					if m.grid[i][counter] == m.grid[i][counter+inc] {
+						m.grid[i][counter+inc] = m.grid[i][counter+inc] * 2
+						m.score += m.grid[i][counter+inc]
+						m.grid[i][counter] = 0
+					} else if m.grid[i][counter+inc] == 0 {
+						m.grid[i][counter+inc] = m.grid[i][counter]
+						m.grid[i][counter] = 0
+					}
+
+					if direction == "left" {
+						counter -= 1
+					} else {
+						counter += 1
+					}
 				}
 			}
 		}
@@ -86,6 +147,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "up", "w":
 			m.MoveGrid("up")
+			m.SpawnNum()
+
+		case "down", "s":
+			m.MoveGrid("down")
+			m.SpawnNum()
+
+		case "left", "a":
+			m.MoveGrid("left")
+			m.SpawnNum()
+
+		case "right", "d":
+			m.MoveGrid("right")
+			m.SpawnNum()
 
 		}
 	}
@@ -113,6 +187,7 @@ func (m model) View() string {
 }
 
 func main() {
+	rand.Seed(time.Now().Unix())
 	p := tea.NewProgram(initialModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
