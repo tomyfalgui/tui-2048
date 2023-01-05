@@ -52,6 +52,31 @@ func initialModel() model {
 	}
 }
 
+func (m *model) MoveGrid(direction string) {
+	switch direction {
+	case "up":
+		for i, row := range m.grid {
+			for j := range row {
+				if i == 0 {
+					continue
+				}
+				counter := i
+				for counter != 0 {
+					if m.grid[i][j] == m.grid[i-1][j] {
+						m.grid[i-1][j] = m.grid[i][j] * 2
+						m.grid[i][j] = 0
+					} else if m.grid[i-1][j] == 0 {
+
+						m.grid[i-1][j] = m.grid[i][j]
+						m.grid[i][j] = 0
+					}
+					counter -= 1
+				}
+			}
+		}
+	}
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -59,7 +84,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
 
-    case "up", "w":
+		case "up", "w":
+			m.MoveGrid("up")
 
 		}
 	}
