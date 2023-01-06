@@ -10,8 +10,9 @@ import (
 )
 
 type model struct {
-	grid  [4][4]int
-	score int
+	grid     [4][4]int
+	score    int
+	gameOver bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -138,6 +139,43 @@ func (m *model) MoveGrid(direction string) {
 	}
 }
 
+func (m model) IsGameOver() bool {
+	var freeRowCol [][2]int
+	noMove := true
+	for i, row := range m.grid {
+		for j := range row {
+			if m.grid[i][j] == 0 {
+				freeRowCol = append(freeRowCol, [2]int{i, j})
+			}
+
+			// check x and y
+			for ii := 0; ii < 4; ii++ {
+				if i == ii || ii > i+1 || ii < i-1 {
+					continue
+				}
+
+				if m.grid[ii][j] == m.grid[i][j] {
+					noMove = false
+				}
+			}
+			for jj := 0; jj < 4; jj++ {
+				if j == jj || jj > j+1 || jj < j-1 {
+					continue
+				}
+				if m.grid[i][jj] == m.grid[i][j] {
+					noMove = false
+				}
+			}
+		}
+	}
+
+	if len(freeRowCol) == 0 && noMove {
+		return true
+	}
+
+	return false
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -164,12 +202,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	m.gameOver = m.IsGameOver()
 	return m, nil
 }
 
 func (m model) View() string {
 	// The header
 	s := "2048\n\n"
+
+	if m.gameOver {
+		s += "Game Over"
+	}
 
 	s += fmt.Sprintf("Score: %d\n", m.score)
 
