@@ -7,6 +7,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -207,6 +208,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	style := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FAFAFA")).
+		Background(lipgloss.Color("#7D56F4")).
+		Width(5)
 	// The header
 	s := "2048\n\n"
 
@@ -218,7 +224,7 @@ func (m model) View() string {
 
 	for _, row := range m.grid {
 		for _, col := range row {
-			s += fmt.Sprintf(" %d ", col)
+			s += style.Render(fmt.Sprintf("%d", col))
 		}
 		s += fmt.Sprint("\n")
 	}
